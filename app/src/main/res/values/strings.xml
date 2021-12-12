@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">caring parents</string>
+    <string name="app_login">Login</string>
+    <string name="app_name_big">Caring Parents</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Caring Parents</string>
+    <string name="nav_header_subtitle">vovabogdan4@gmail.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Настройки</string>
+
+    <string name="menu_home">Домашняя</string>
+    <string name="menu_gallery">Галлерея</string>
+    <string name="menu_slideshow">Слайдшоу</string>
+
+
+    <string name="text_bottom">Войдите в свою учётную запись!</string>
+    <string name="sign">Войти</string>
+    <string name="register">Зарегистрироваться</string>
+
+</resources>
