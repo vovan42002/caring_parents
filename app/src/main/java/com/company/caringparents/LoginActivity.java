@@ -66,6 +66,8 @@ public class LoginActivity extends AppCompatActivity {
     private void showSignInWindow() {
         final MaterialEditText email_sign_in = findViewById(R.id.email_field_sign_in);
         final MaterialEditText password_sign_in = findViewById(R.id.password_field_sign_in);
+        Global.email = email_sign_in.getText().toString();
+        Global.password = password_sign_in.getText().toString();
         final String urlCheckParent = ip+"/checkParent?&email=" + encrypt(email_sign_in.getText().toString()) +
                 "&password=" + encrypt(password_sign_in.getText().toString());
         if (checkingExist(urlCheckParent)) {

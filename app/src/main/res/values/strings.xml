@@ -17,5 +17,6 @@
     <string name="text_bottom">Войдите в свою учётную запись!</string>
     <string name="sign">Войти</string>
     <string name="register">Зарегистрироваться</string>
-
+    <string name="button_add_child">Добавить ребенка</string>
+    <string name="your_childs">Ваши дети</string>
 </resources>
