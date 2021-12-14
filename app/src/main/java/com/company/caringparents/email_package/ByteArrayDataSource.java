@@ -1,4 +1,4 @@
-package com.company.caringparents.mailPack;
+package com.company.caringparents.email_package;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

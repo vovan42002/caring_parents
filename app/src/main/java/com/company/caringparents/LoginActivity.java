@@ -14,7 +14,7 @@ import android.widget.RelativeLayout;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.company.caringparents.mailPack.GMailSender;
+import com.company.caringparents.email_package.GMailSender;
 import com.google.android.material.snackbar.Snackbar;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
@@ -180,32 +180,28 @@ public class LoginActivity extends AppCompatActivity {
                         if (HttpURLConnection.HTTP_OK == connection.getResponseCode()) {
                             System.out.println("Checking existing parent");
                             if (checkingExist(urlCheckParent)) {
-
-
-
-                                new Thread(new Runnable() {
-
-                                    @Override
-                                    public void run() {
-                                        try {
-                                            GMailSender sender = new GMailSender("volodimirbogdan4@gmail.com",
-                                                    "4ftj2002");
-                                            sender.sendMail("Hello from JavaMail", "Body from JavaMail",
-                                                    "volodimirbogdan4@gmail.com", "volodimirbogdan4@gmail.com");
-                                        } catch (Exception e) {
-                                            Log.e("SendMail", e.getMessage(), e);
-                                        }
+                                //send message to email
+                                new Thread(() -> {
+                                    try {
+                                        GMailSender sender = new GMailSender("volodimirbogdan4@gmail.com",
+                                                "4ftj2002");
+                                        sender.sendMail("Hello from Caring Parents", "Спасибо за регистрацию в нашем " +
+                                                        "приложении Caring Parents. Теперь контролировать ваших детей будет намного проще",
+                                                "volodimirbogdan4@gmail.com", email.getText().toString());
+                                    } catch (Exception e) {
+                                        Log.e("SendMail", e.getMessage(), e);
                                     }
-
                                 }).start();
 
-
-                                Global.email = email.getText().toString();
-                                Global.password = password.getText().toString();
+                                //initial global variables
+                                Global.email = email.getText().toString(); //global email
+                                Global.password = password.getText().toString();//global pass
+                                //get parent id
                                 final String urlGetParentId = ip+"/getParentId?email="+encrypt(email.getText().toString())
                                         +"&password="+ encrypt(password.getText().toString());
-                                Global.id = getParentId(urlGetParentId);
+                                Global.id = getParentId(urlGetParentId); //global id
                                 System.out.println("Global id="+Global.id);
+                                //start Activity
                                 Intent intent = new Intent(LoginActivity.this, Activity.class);
                                 startActivity(intent);
                             }

@@ -1,10 +1,13 @@
 package com.company.caringparents;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -15,7 +18,7 @@ import com.company.caringparents.databinding.ActivityMainBinding;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
-public class Activity extends AppCompatActivity{
+public class Activity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private ActivityMainBinding binding;
@@ -37,16 +40,32 @@ public class Activity extends AppCompatActivity{
         });
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
-        navigationView.setItemIconTintList(null);
+        navigationView.setItemIconTintList(null);   //можно вставлять картинки в родном их цвете
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
+                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow, R.id.nav_map_open)
                 .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+        MenuItem menuItem = navigationView.getMenu().findItem(R.id.nav_map_open);
+        menuItem.setOnMenuItemClickListener(menuItem1 -> {
+            System.out.println("ItemClickListener "+ menuItem1.toString());
+
+            /*// Creates an Intent that will load a map of San Francisco
+            Uri gmmIntentUri = Uri.parse("geo:37.7749,-122.4194");
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+            mapIntent.setPackage("com.google.android.apps.maps");
+            startActivity(mapIntent);*/
+
+            Intent mapIntent = new Intent(this, MapsActivity.class);
+            startActivity(mapIntent);
+
+            drawer.closeDrawer(GravityCompat.START);
+            return true;
+        });
     }
 
     @Override
@@ -62,4 +81,5 @@ public class Activity extends AppCompatActivity{
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
     }
+
 }

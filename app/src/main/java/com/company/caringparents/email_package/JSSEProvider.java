@@ -1,4 +1,4 @@
-package com.company.caringparents.mailPack;
+package com.company.caringparents.email_package;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more

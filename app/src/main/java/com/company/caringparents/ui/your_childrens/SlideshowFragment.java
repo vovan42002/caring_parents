@@ -1,4 +1,4 @@
-package com.company.caringparents.ui.slideshow;
+package com.company.caringparents.ui.your_childrens;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
