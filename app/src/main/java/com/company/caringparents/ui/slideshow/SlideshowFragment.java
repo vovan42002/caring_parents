@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -13,7 +14,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.company.caringparents.Global;
-import com.company.caringparents.LoginActivity;
+import com.company.caringparents.R;
 import com.company.caringparents.databinding.FragmentSlideshowBinding;
 
 import java.io.BufferedReader;
@@ -27,9 +28,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class SlideshowFragment extends Fragment {
-    LoginActivity loginActivity;
+
     private SlideshowViewModel slideshowViewModel;
     private FragmentSlideshowBinding binding;
+    private Button buttonAddChild;
     final String ip = "http://192.168.0.109:8080/parent";
 
     RecyclerView.Adapter recyclerViewAdapter;
@@ -41,19 +43,26 @@ public class SlideshowFragment extends Fragment {
 
         binding = FragmentSlideshowBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+        buttonAddChild = root.findViewById(R.id.buttonAddChild);
+        buttonAddChild.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showRegisterWindow();
+            }
+        });
         final TextView textView = binding.textSlideshow;
         slideshowViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(String s) {
-                final String urlCheckParent = ip + "/checkParent?&email=" + encrypt(Global.email) +
-                        "&password=" + encrypt(Global.password);
+                final String urlCheckParent = ip + "/checkParent?&email=" + encrypt(Global.email) + "&password=" + encrypt(Global.password);
                 if (checkingExist(urlCheckParent) == true) {
-                    System.out.println("YES");
-                    final String urlListChild = ip + "/listChilds?idParent=" + "1";
+                    final String urlListChild = ip + "/listChilds?idParent=" + Global.id;
                     System.out.println("Дети: " + listChild(urlListChild));
-                    textView.setText(listChild(urlListChild));
+                    if (listChild(urlListChild) == null || listChild(urlListChild) == "") {
+                        textView.setText("List of child's is empty");
+                    } else
+                        textView.setText(listChild(urlListChild));
                 }
-
             }
         });
         return root;
@@ -64,6 +73,9 @@ public class SlideshowFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+    private void showRegisterWindow(){
+
     }
 
     private String listChild(String url) {
@@ -95,6 +107,7 @@ public class SlideshowFragment extends Fragment {
             }
             if (sb != null)
                 return sb.toString();
+            else return "Empty";
 
         } catch (ProtocolException e) {
             e.printStackTrace();

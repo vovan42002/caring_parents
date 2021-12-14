@@ -11,21 +11,10 @@ public class SlideshowViewModel extends ViewModel {
 
     public SlideshowViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("This is slideshow fragment");
-
-
-        String array = "child1"+"\n"+"child2";
-
-        System.out.println(array);
-        ar = new MutableLiveData<>();
-        ar.setValue(array);
+        mText.setValue("List of child's is empty");
     }
 
     public LiveData<String> getText() {
         return mText;
     }
-    public LiveData<String> getTextChild() {
-        return ar;
-    }
-
 }

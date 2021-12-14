@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -13,6 +14,7 @@ import android.widget.RelativeLayout;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.company.caringparents.mailPack.GMailSender;
 import com.google.android.material.snackbar.Snackbar;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
@@ -66,11 +68,15 @@ public class LoginActivity extends AppCompatActivity {
     private void showSignInWindow() {
         final MaterialEditText email_sign_in = findViewById(R.id.email_field_sign_in);
         final MaterialEditText password_sign_in = findViewById(R.id.password_field_sign_in);
-        Global.email = email_sign_in.getText().toString();
-        Global.password = password_sign_in.getText().toString();
         final String urlCheckParent = ip+"/checkParent?&email=" + encrypt(email_sign_in.getText().toString()) +
                 "&password=" + encrypt(password_sign_in.getText().toString());
         if (checkingExist(urlCheckParent)) {
+            Global.email = email_sign_in.getText().toString();
+            Global.password = password_sign_in.getText().toString();
+            final String urlGetParentId = ip+"/getParentId?email="+encrypt(email_sign_in.getText().toString())
+                    +"&password="+ encrypt(password_sign_in.getText().toString());
+            Global.id = getParentId(urlGetParentId);
+            System.out.println("Global id="+Global.id);
             Intent intent = new Intent(this, Activity.class);
             startActivity(intent);
         } else
@@ -122,6 +128,12 @@ public class LoginActivity extends AppCompatActivity {
                     return;
                 }
 
+                if(isValidEmail(email.getText().toString()) == false){
+                    System.out.println("Email valid: "+isValidEmail(email.getText().toString()));
+                    Snackbar.make(root, "Неправильная почта", Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
+
                 final String urlExistNick = ip+"/existNick?nickname=" + encrypt(nick.getText().toString());
                 final String urlExistEmail = ip+"/existEmail?email="+encrypt(email.getText().toString());
                 final String urlCheckParent = ip+"/checkParent?&email=" + encrypt(email.getText().toString()) +
@@ -167,8 +179,33 @@ public class LoginActivity extends AppCompatActivity {
 
                         if (HttpURLConnection.HTTP_OK == connection.getResponseCode()) {
                             System.out.println("Checking existing parent");
-
                             if (checkingExist(urlCheckParent)) {
+
+
+
+                                new Thread(new Runnable() {
+
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            GMailSender sender = new GMailSender("volodimirbogdan4@gmail.com",
+                                                    "4ftj2002");
+                                            sender.sendMail("Hello from JavaMail", "Body from JavaMail",
+                                                    "volodimirbogdan4@gmail.com", "volodimirbogdan4@gmail.com");
+                                        } catch (Exception e) {
+                                            Log.e("SendMail", e.getMessage(), e);
+                                        }
+                                    }
+
+                                }).start();
+
+
+                                Global.email = email.getText().toString();
+                                Global.password = password.getText().toString();
+                                final String urlGetParentId = ip+"/getParentId?email="+encrypt(email.getText().toString())
+                                        +"&password="+ encrypt(password.getText().toString());
+                                Global.id = getParentId(urlGetParentId);
+                                System.out.println("Global id="+Global.id);
                                 Intent intent = new Intent(LoginActivity.this, Activity.class);
                                 startActivity(intent);
                             }
@@ -242,6 +279,49 @@ public class LoginActivity extends AppCompatActivity {
         return false;
     }
 
+
+    private Long getParentId(String url) {
+        System.out.println(url);
+        HttpURLConnection connection = null;
+        try {
+            connection = (HttpURLConnection) new URL(url).openConnection();
+
+            connection.setRequestMethod("GET");
+            connection.setDoInput(true);
+            connection.setUseCaches(false);
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+
+            connection.connect();
+
+            BufferedReader br;
+            System.out.println("Response code = " + connection.getResponseCode() + " message = " + connection.getResponseMessage());
+            if (200 <= connection.getResponseCode() && connection.getResponseCode() <= 299) {
+                br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            } else {
+                br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+            }
+
+            String output;
+            StringBuilder sb = new StringBuilder();
+            while ((output = br.readLine()) != null) {
+                sb.append(output);
+                System.out.println("Никнейм существует: "+sb.toString());
+            }
+            if (sb != null){
+                return Long.valueOf(sb.toString());
+            } else return null;
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
     public static String encrypt(String str) {
         MessageDigest md5 = null;
         try { md5 = MessageDigest.getInstance("MD5"); } catch (NoSuchAlgorithmException e) { e.printStackTrace(); }
@@ -252,6 +332,11 @@ public class LoginActivity extends AppCompatActivity {
         }
         System.out.println(sb);
         return sb.toString();
+    }
+
+
+    public final static boolean isValidEmail(CharSequence target) {
+        return !TextUtils.isEmpty(target) && android.util.Patterns.EMAIL_ADDRESS.matcher(target).matches();
     }
 
 }

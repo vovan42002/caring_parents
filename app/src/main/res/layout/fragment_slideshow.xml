@@ -21,7 +21,8 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:textAlignment="center"
-        android:textSize="20sp"
+        android:textSize="30sp"
+        android:textColor="@color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -34,8 +35,7 @@
             android:layout_height="wrap_content"
             android:text="@string/button_add_child"
             android:background="@drawable/sign"
-            android:layout_gravity="center"
-            />
-        
+            android:layout_gravity="center" />
+
     </LinearLayout>
 </RelativeLayout>
