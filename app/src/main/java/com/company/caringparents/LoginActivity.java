@@ -76,6 +76,7 @@ public class LoginActivity extends AppCompatActivity {
             final String urlGetParentId = ip+"/getParentId?email="+encrypt(email_sign_in.getText().toString())
                     +"&password="+ encrypt(password_sign_in.getText().toString());
             Global.id = getParentId(urlGetParentId);
+
             System.out.println("Global id="+Global.id);
             Intent intent = new Intent(this, Activity.class);
             startActivity(intent);

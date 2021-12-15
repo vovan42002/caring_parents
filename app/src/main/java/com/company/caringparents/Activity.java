@@ -53,13 +53,6 @@ public class Activity extends AppCompatActivity {
         MenuItem menuItem = navigationView.getMenu().findItem(R.id.nav_map_open);
         menuItem.setOnMenuItemClickListener(menuItem1 -> {
             System.out.println("ItemClickListener "+ menuItem1.toString());
-
-            /*// Creates an Intent that will load a map of San Francisco
-            Uri gmmIntentUri = Uri.parse("geo:37.7749,-122.4194");
-            Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-            mapIntent.setPackage("com.google.android.apps.maps");
-            startActivity(mapIntent);*/
-
             Intent mapIntent = new Intent(this, MapsActivity.class);
             startActivity(mapIntent);
 
