@@ -1,24 +1,27 @@
 package com.company.caringparents.ui.your_childrens;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.company.caringparents.Global;
 import com.company.caringparents.R;
+import com.company.caringparents.app.AppActivity;
 import com.company.caringparents.databinding.FragmentSlideshowBinding;
 import com.company.caringparents.email_package.GMailSender;
 import com.google.android.material.snackbar.Snackbar;
@@ -37,46 +40,59 @@ import java.net.ProtocolException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SlideshowFragment extends Fragment {
-
+    private List<String> list;
     private SlideshowViewModel slideshowViewModel;
     private FragmentSlideshowBinding binding;
     private Button buttonAddChild;
-    final String ip = "http://192.168.0.109:8080/parent";
 
-    RecyclerView.Adapter recyclerViewAdapter;
-
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-        slideshowViewModel =
-                new ViewModelProvider(this).get(SlideshowViewModel.class);
-
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        slideshowViewModel = new ViewModelProvider(this).get(SlideshowViewModel.class);
         binding = FragmentSlideshowBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         buttonAddChild = root.findViewById(R.id.buttonAddChild);
-        buttonAddChild.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showRegisterWindow();
+        buttonAddChild.setOnClickListener(view -> showRegisterWindow());
+
+        final String urlCheckParent = Global.ip + "/parent/checkParent?&email=" + encrypt(Global.email) +
+                "&password=" + encrypt(Global.password);
+
+        if (checkingExist(urlCheckParent) == true) {
+
+            final String urlListChild = Global.ip + "/parent/listChilds?idParent=" + Global.id;
+            list = listChild(urlListChild);
+
+            ListView listView = root.findViewById(R.id.list_childs);
+
+            if (listChild(urlListChild) == null) {
+                System.out.println("List of child's is empty");
+            } else {
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, list);
+                listView.setAdapter(adapter);
             }
-        });
-        final TextView textView = binding.textSlideshow;
-        slideshowViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(String s) {
-                final String urlCheckParent = ip + "/checkParent?&email=" + encrypt(Global.email) +
-                        "&password=" + encrypt(Global.password);
-                if (checkingExist(urlCheckParent) == true) {
-                    final String urlListChild = ip + "/listChilds?idParent=" + Global.id;
-                    System.out.println("Дети: " + listChild(urlListChild));
-                    if (listChild(urlListChild) == null || listChild(urlListChild) == "") {
-                        textView.setText("List of child's is empty");
-                    } else
-                        textView.setText(listChild(urlListChild));
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                    System.out.println(((TextView)view).getText());
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Global.child_name = ((TextView)view).getText().toString();
+                            String urlGetChildId = Global.ip+"/child/getChildId?idParent="+Global.id+"&name="+Global.child_name;
+                            Long idChild = getChildId(urlGetChildId);
+                            if (idChild != null) {
+                                Global.child_id = idChild;
+                                Intent intent = new Intent(getContext(), AppActivity.class);
+                                startActivity(intent);
+                            }
+                        }
+                    }).start();
+
                 }
-            }
-        });
+            });
+        }
         return root;
     }
 
@@ -87,7 +103,8 @@ public class SlideshowFragment extends Fragment {
         binding = null;
     }
 
-    private String listChild(String url) {
+    private List<String> listChild(String url) {
+        List<String> list = new ArrayList<>();
         System.out.println(url);
         HttpURLConnection connection = null;
         try {
@@ -113,10 +130,11 @@ public class SlideshowFragment extends Fragment {
             StringBuilder sb = new StringBuilder();
             while ((output = br.readLine()) != null) {
                 sb.append(output).append("\n");
+                list.add(output);
             }
             if (sb != null)
-                return sb.toString();
-            else return "Empty";
+                return list;
+            else return list;
 
         } catch (ProtocolException e) {
             e.printStackTrace();
@@ -125,7 +143,7 @@ public class SlideshowFragment extends Fragment {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "Empty";
+        return list;
     }
 
     private boolean checkingExist(String url) {
@@ -243,7 +261,7 @@ public class SlideshowFragment extends Fragment {
                 e.printStackTrace();
             }
 
-            final String url = "http://192.168.0.109:8080/child" + "/add?parent_id="+Global.id;
+            final String url = Global.ip + "/child/add?parent_id=" + Global.id;
             System.out.println(url);
             HttpURLConnection connection = null;
             try {
@@ -267,18 +285,18 @@ public class SlideshowFragment extends Fragment {
                 StringBuilder sb = new StringBuilder();
 
                 if (HttpURLConnection.HTTP_OK == connection.getResponseCode()) {
-                        //send message to email
-                        new Thread(() -> {
-                            try {
-                                GMailSender sender = new GMailSender("volodimirbogdan4@gmail.com",
-                                        "4ftj2002");
-                                sender.sendMail("Hello from Caring Parents", "Вы успешно добавили ребенка. " +
-                                                "Имя для регистрации в детском приложении:"+nick.getText().toString(),
-                                        "volodimirbogdan4@gmail.com", email.getText().toString());
-                            } catch (Exception e) {
-                                Log.e("SendMail", e.getMessage(), e);
-                            }
-                        }).start();
+                    //send message to email
+                    new Thread(() -> {
+                        try {
+                            GMailSender sender = new GMailSender("volodimirbogdan4@gmail.com",
+                                    "4ftj2002");
+                            sender.sendMail("Hello from Caring Parents", "Вы успешно добавили ребенка. " +
+                                            "Имя для регистрации в детском приложении:" + nick.getText().toString(),
+                                    "volodimirbogdan4@gmail.com", email.getText().toString());
+                        } catch (Exception e) {
+                            Log.e("SendMail", e.getMessage(), e);
+                        }
+                    }).start();
 
                     BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                     String line;
@@ -290,7 +308,6 @@ public class SlideshowFragment extends Fragment {
                 } else {
                     System.out.println("FAIL: " + connection.getResponseCode() + ", " + connection.getResponseMessage());
                 }
-
             } catch (Throwable cause) {
                 cause.printStackTrace();
             } finally {
@@ -300,11 +317,49 @@ public class SlideshowFragment extends Fragment {
             }
         });
         dialog.show();
-
     }
 
     public final static boolean isValidEmail(CharSequence target) {
         return !TextUtils.isEmpty(target) && android.util.Patterns.EMAIL_ADDRESS.matcher(target).matches();
     }
+    private Long getChildId(String url) {
+        System.out.println(url);
+        HttpURLConnection connection = null;
+        try {
+            connection = (HttpURLConnection) new URL(url).openConnection();
 
+            connection.setRequestMethod("GET");
+            connection.setDoInput(true);
+            connection.setUseCaches(false);
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
+
+            connection.connect();
+
+            BufferedReader br;
+            System.out.println("Response code = " + connection.getResponseCode() + " message = " + connection.getResponseMessage());
+            if (200 <= connection.getResponseCode() && connection.getResponseCode() <= 299) {
+                br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            } else {
+                br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+            }
+
+            String output;
+            StringBuilder sb = new StringBuilder();
+            while ((output = br.readLine()) != null) {
+                sb.append(output);
+                System.out.println("Никнейм существует: " + sb.toString());
+            }
+            if (sb != null) {
+                return Long.valueOf(sb.toString());
+            } else return null;
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

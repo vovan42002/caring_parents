@@ -20,4 +20,17 @@
     <string name="button_add_child">Добавить ребенка</string>
     <string name="your_childs">Ваши дети</string>
     <string name="title_activity_maps">MapsActivity</string>
+
+
+    <string name="use_time">use time</string>
+
+    <string name="open_app_usage_setting">Open Apps with usage access settings</string>
+    <string name="last_time_used">"Last time used: "</string>
+    <string name="time_span">"Time span: "</string>
+
+    <string name="display_order_text">Children applications</string>
+    <string name="app_name_label">App</string>
+    <string name="last_time_used_label">Last time used</string>
+    <!-- label for usage time -->
+    <string name="usage_time_label">Usage time</string>
 </resources>

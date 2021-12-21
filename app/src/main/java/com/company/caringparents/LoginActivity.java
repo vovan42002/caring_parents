@@ -1,6 +1,5 @@
 package com.company.caringparents;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -36,7 +35,8 @@ public class LoginActivity extends AppCompatActivity {
 
     Button buttonSignIn, buttonRegister;
     RelativeLayout root;
-    final String ip = "http://192.168.0.109:8080/parent";
+   // final String ip = "http://192.168.0.109:8080/parent";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +49,7 @@ public class LoginActivity extends AppCompatActivity {
 
         buttonSignIn = findViewById(R.id.buttonSingIn);
         buttonRegister = findViewById(R.id.buttonRegister);
+
 
         root = findViewById(R.id.root_element);
         new Thread(() -> buttonRegister.setOnClickListener(new View.OnClickListener() {
@@ -63,21 +64,23 @@ public class LoginActivity extends AppCompatActivity {
                 showSignInWindow();
             }
         })).start();
+
+
     }
 
     private void showSignInWindow() {
         final MaterialEditText email_sign_in = findViewById(R.id.email_field_sign_in);
         final MaterialEditText password_sign_in = findViewById(R.id.password_field_sign_in);
-        final String urlCheckParent = ip+"/checkParent?&email=" + encrypt(email_sign_in.getText().toString()) +
+        final String urlCheckParent = Global.ip + "/parent/checkParent?&email=" + encrypt(email_sign_in.getText().toString()) +
                 "&password=" + encrypt(password_sign_in.getText().toString());
         if (checkingExist(urlCheckParent)) {
             Global.email = email_sign_in.getText().toString();
             Global.password = password_sign_in.getText().toString();
-            final String urlGetParentId = ip+"/getParentId?email="+encrypt(email_sign_in.getText().toString())
-                    +"&password="+ encrypt(password_sign_in.getText().toString());
+            final String urlGetParentId = Global.ip + "/parent/getParentId?email=" + encrypt(email_sign_in.getText().toString())
+                    + "&password=" + encrypt(password_sign_in.getText().toString());
             Global.id = getParentId(urlGetParentId);
 
-            System.out.println("Global id="+Global.id);
+            System.out.println("Global id=" + Global.id);
             Intent intent = new Intent(this, Activity.class);
             startActivity(intent);
         } else
@@ -99,137 +102,127 @@ public class LoginActivity extends AppCompatActivity {
         final MaterialEditText password = register_window.findViewById(R.id.passwordField);
 
 
-
-        dialog.setNegativeButton("Отменить", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.dismiss();
-
+        dialog.setNegativeButton("Отменить", (dialogInterface, i) -> dialogInterface.dismiss());
+        dialog.setPositiveButton("Добавить", (dialogInterface, i) -> {
+            if (TextUtils.isEmpty(email.getText().toString())) {
+                Snackbar.make(root, "Введите почту", Snackbar.LENGTH_SHORT).show();
+                return;
             }
-        });
-        dialog.setPositiveButton("Добавить", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                if (TextUtils.isEmpty(email.getText().toString())) {
-                    Snackbar.make(root, "Введите почту", Snackbar.LENGTH_SHORT).show();
-                    return;
-                }
-                if (TextUtils.isEmpty(nick.getText().toString())) {
-                    Snackbar.make(root, "Введите никнейм", Snackbar.LENGTH_SHORT).show();
-                    return;
-                }
-                if (password.getText().toString().length() == 0) {
-                    Snackbar.make(root, "Введите пароль", Snackbar.LENGTH_SHORT).show();
-                    return;
-                } else if (password.getText().toString().length() < 6) {
-                    Snackbar.make(root, "Пароль слишком короткий", Snackbar.LENGTH_SHORT).show();
-                    return;
-                } else if (password.getText().toString().length() > 50) {
-                    Snackbar.make(root, "Пароль слишком долгий", Snackbar.LENGTH_SHORT).show();
-                    return;
-                }
-
-                if(isValidEmail(email.getText().toString()) == false){
-                    System.out.println("Email valid: "+isValidEmail(email.getText().toString()));
-                    Snackbar.make(root, "Неправильная почта", Snackbar.LENGTH_SHORT).show();
-                    return;
-                }
-
-                final String urlExistNick = ip+"/existNick?nickname=" + encrypt(nick.getText().toString());
-                final String urlExistEmail = ip+"/existEmail?email="+encrypt(email.getText().toString());
-                final String urlCheckParent = ip+"/checkParent?&email=" + encrypt(email.getText().toString()) +
-                        "&password=" + encrypt(password.getText().toString());
-                if (checkingExist(urlExistNick) == false) {
-                    if(checkingExist(urlExistEmail)){
-                        Snackbar.make(root, "Данная почта уже используется", Snackbar.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    // Регистрация пользователя
-                    JSONObject js = new JSONObject();
-                    try {
-                        js.put("nickname", encrypt(nick.getText().toString()));
-                        js.put("password", encrypt(password.getText().toString()));
-                        js.put("email", encrypt(email.getText().toString()));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-                    final String url = ip+"/create";
-                    System.out.println(url);
-                    HttpURLConnection connection = null;
-                    try {
-                        connection = (HttpURLConnection) new URL(url).openConnection();
-
-                        connection.setRequestMethod("POST");
-                        connection.setRequestProperty("Content-Type", "application/json; utf-8");
-                        connection.setRequestProperty("Accept", "application/json");
-                        connection.setDoOutput(true);
-                        connection.setUseCaches(false);
-                        connection.setConnectTimeout(5000);
-                        connection.setReadTimeout(5000);
-
-                        connection.connect();
-
-                        //send JSON
-                        OutputStream os = connection.getOutputStream();
-                        os.write(js.toString().getBytes("UTF-8"));
-                        os.close();
-
-                        StringBuilder sb = new StringBuilder();
-
-                        if (HttpURLConnection.HTTP_OK == connection.getResponseCode()) {
-                            System.out.println("Checking existing parent");
-                            if (checkingExist(urlCheckParent)) {
-                                //send message to email
-                                new Thread(() -> {
-                                    try {
-                                        GMailSender sender = new GMailSender("volodimirbogdan4@gmail.com",
-                                                "4ftj2002");
-                                        sender.sendMail("Hello from Caring Parents", "Спасибо за регистрацию в нашем " +
-                                                        "приложении Caring Parents. Теперь контролировать ваших детей будет намного проще",
-                                                "volodimirbogdan4@gmail.com", email.getText().toString());
-                                    } catch (Exception e) {
-                                        Log.e("SendMail", e.getMessage(), e);
-                                    }
-                                }).start();
-
-                                //initial global variables
-                                Global.email = email.getText().toString(); //global email
-                                Global.password = password.getText().toString();//global pass
-                                //get parent id
-                                final String urlGetParentId = ip+"/getParentId?email="+encrypt(email.getText().toString())
-                                        +"&password="+ encrypt(password.getText().toString());
-                                Global.id = getParentId(urlGetParentId); //global id
-                                System.out.println("Global id="+Global.id);
-                                //start Activity
-                                Intent intent = new Intent(LoginActivity.this, Activity.class);
-                                startActivity(intent);
-                            }
-                            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                            String line;
-                            while ((line = in.readLine()) != null) {
-                                sb.append(line);
-                                sb.append("\n");
-                            }
-                            System.out.println(sb.toString());
-                        } else {
-                            System.out.println("FAIL: " + connection.getResponseCode() + ", " + connection.getResponseMessage());
-                        }
-
-                    } catch (Throwable cause) {
-                        cause.printStackTrace();
-                    } finally {
-                        if (connection != null) {
-                            connection.disconnect();
-                        }
-                    }
-                } else if (checkingExist(urlExistNick) == true){
-                    Snackbar.make(root, "Данный ник уже используется", Snackbar.LENGTH_SHORT).show();
-                    return;
-                }
-
+            if (TextUtils.isEmpty(nick.getText().toString())) {
+                Snackbar.make(root, "Введите никнейм", Snackbar.LENGTH_SHORT).show();
+                return;
             }
+            if (password.getText().toString().length() == 0) {
+                Snackbar.make(root, "Введите пароль", Snackbar.LENGTH_SHORT).show();
+                return;
+            } else if (password.getText().toString().length() < 6) {
+                Snackbar.make(root, "Пароль слишком короткий", Snackbar.LENGTH_SHORT).show();
+                return;
+            } else if (password.getText().toString().length() > 50) {
+                Snackbar.make(root, "Пароль слишком долгий", Snackbar.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (isValidEmail(email.getText().toString()) == false) {
+                System.out.println("Email valid: " + isValidEmail(email.getText().toString()));
+                Snackbar.make(root, "Неправильная почта", Snackbar.LENGTH_SHORT).show();
+                return;
+            }
+
+            final String urlExistNick = Global.ip + "/parent/existNick?nickname=" + encrypt(nick.getText().toString());
+            final String urlExistEmail = Global.ip + "/parent/existEmail?email=" + encrypt(email.getText().toString());
+            final String urlCheckParent = Global.ip + "/parent/checkParent?&email=" + encrypt(email.getText().toString()) +
+                    "&password=" + encrypt(password.getText().toString());
+            if (checkingExist(urlExistNick) == false) {
+                if (checkingExist(urlExistEmail)) {
+                    Snackbar.make(root, "Данная почта уже используется", Snackbar.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Регистрация пользователя
+                JSONObject js = new JSONObject();
+                try {
+                    js.put("nickname", encrypt(nick.getText().toString()));
+                    js.put("password", encrypt(password.getText().toString()));
+                    js.put("email", encrypt(email.getText().toString()));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                final String url = Global.ip + "/parent/create";
+                System.out.println(url);
+                HttpURLConnection connection = null;
+                try {
+                    connection = (HttpURLConnection) new URL(url).openConnection();
+
+                    connection.setRequestMethod("POST");
+                    connection.setRequestProperty("Content-Type", "application/json; utf-8");
+                    connection.setRequestProperty("Accept", "application/json");
+                    connection.setDoOutput(true);
+                    connection.setUseCaches(false);
+                    connection.setConnectTimeout(5000);
+                    connection.setReadTimeout(5000);
+
+                    connection.connect();
+
+                    //send JSON
+                    OutputStream os = connection.getOutputStream();
+                    os.write(js.toString().getBytes("UTF-8"));
+                    os.close();
+
+                    StringBuilder sb = new StringBuilder();
+
+                    if (HttpURLConnection.HTTP_OK == connection.getResponseCode()) {
+                        System.out.println("Checking existing parent");
+                        if (checkingExist(urlCheckParent)) {
+                            //send message to email
+                            new Thread(() -> {
+                                try {
+                                    GMailSender sender = new GMailSender("volodimirbogdan4@gmail.com",
+                                            "4ftj2002");
+                                    sender.sendMail("Hello from Caring Parents", "Спасибо за регистрацию в нашем " +
+                                                    "приложении Caring Parents. Теперь контролировать ваших детей будет намного проще",
+                                            "volodimirbogdan4@gmail.com", email.getText().toString());
+                                } catch (Exception e) {
+                                    Log.e("SendMail", e.getMessage(), e);
+                                }
+                            }).start();
+
+                            //initial global variables
+                            Global.email = email.getText().toString(); //global email
+                            Global.password = password.getText().toString();//global pass
+                            //get parent id
+                            final String urlGetParentId = Global.ip + "/parent/getParentId?email=" + encrypt(email.getText().toString())
+                                    + "&password=" + encrypt(password.getText().toString());
+                            Global.id = getParentId(urlGetParentId); //global id
+                            System.out.println("Global id=" + Global.id);
+                            //start Activity
+                            Intent intent = new Intent(LoginActivity.this, Activity.class);
+                            startActivity(intent);
+                        }
+                        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                        String line;
+                        while ((line = in.readLine()) != null) {
+                            sb.append(line);
+                            sb.append("\n");
+                        }
+                        System.out.println(sb.toString());
+                    } else {
+                        System.out.println("FAIL: " + connection.getResponseCode() + ", " + connection.getResponseMessage());
+                    }
+
+                } catch (Throwable cause) {
+                    cause.printStackTrace();
+                } finally {
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
+                }
+            } else if (checkingExist(urlExistNick) == true) {
+                Snackbar.make(root, "Данный ник уже используется", Snackbar.LENGTH_SHORT).show();
+                return;
+            }
+
         });
         dialog.show();
 
@@ -261,7 +254,7 @@ public class LoginActivity extends AppCompatActivity {
             StringBuilder sb = new StringBuilder();
             while ((output = br.readLine()) != null) {
                 sb.append(output);
-                System.out.println("Никнейм существует: "+sb.toString());
+                System.out.println("Никнейм существует: " + sb.toString());
                 if (sb.toString().hashCode() == one.hashCode()) {
                     return true;
                 }
@@ -303,9 +296,9 @@ public class LoginActivity extends AppCompatActivity {
             StringBuilder sb = new StringBuilder();
             while ((output = br.readLine()) != null) {
                 sb.append(output);
-                System.out.println("Никнейм существует: "+sb.toString());
+                System.out.println("Никнейм существует: " + sb.toString());
             }
-            if (sb != null){
+            if (sb != null) {
                 return Long.valueOf(sb.toString());
             } else return null;
         } catch (ProtocolException e) {
@@ -321,10 +314,14 @@ public class LoginActivity extends AppCompatActivity {
 
     public static String encrypt(String str) {
         MessageDigest md5 = null;
-        try { md5 = MessageDigest.getInstance("MD5"); } catch (NoSuchAlgorithmException e) { e.printStackTrace(); }
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
         byte[] bytes = md5.digest(str.getBytes());
         StringBuilder sb = new StringBuilder();
-        for (byte b : bytes){
+        for (byte b : bytes) {
             sb.append(String.format("%02X", b));
         }
         System.out.println(sb);
