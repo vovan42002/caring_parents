@@ -69,7 +69,7 @@ public class SlideshowFragment extends Fragment {
             if (listChild(urlListChild) == null) {
                 System.out.println("List of child's is empty");
             } else {
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, list);
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), R.layout.simple_child, list);
                 listView.setAdapter(adapter);
             }
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

@@ -12,4 +12,5 @@
     <color name="ripple_effect">#111313</color>
     <color name="button_sign">#1B1616</color>
     <color name="stroke">#c40e38</color>
+    <color name="list">#d7f2f5</color>
 </resources>

@@ -32,8 +32,8 @@ public class Global {
             connection.setRequestMethod("GET");
             connection.setDoInput(true);
             connection.setUseCaches(false);
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
+            connection.setConnectTimeout(100000);
+            connection.setReadTimeout(100000);
 
             connection.connect();
 
